@@ -1,27 +1,36 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
-import { useAuthStore } from '@/stores/authStore';
-import { UserRole } from '@/types';
+import { useAuthStore, type Role } from '@/stores/authStore';
+import { Loader2 } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  requiredRole?: UserRole | UserRole[];
+  requiredRole?: Role | Role[];
 }
 
 export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps) {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated, primaryRole, roles, init, initialized, isLoading } = useAuthStore();
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/auth" replace />;
+  useEffect(() => {
+    if (!initialized) init();
+  }, [initialized, init]);
+
+  if (!initialized || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+
   if (requiredRole) {
-    const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!allowedRoles.includes(user.role)) {
-      return <Navigate to="/" replace />;
-    }
+    const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const hasAccess = allowed.some((r) => roles.includes(r));
+    if (!hasAccess) return <Navigate to="/" replace />;
   }
 
   return (
@@ -30,9 +39,7 @@ export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps
       <div className="flex">
         <Sidebar className="hidden lg:block" />
         <main className="flex-1 p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
     </div>

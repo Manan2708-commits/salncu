@@ -1,85 +1,121 @@
 import { create } from 'zustand';
-import { User, UserRole } from '@/types';
-import { mockUsers } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import type { Session, User as AuthUser } from '@supabase/supabase-js';
+
+export type Role = 'admin' | 'club_admin' | 'student';
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string | null;
+}
 
 interface AuthState {
-  user: User | null;
+  session: Session | null;
+  authUser: AuthUser | null;
+  user: AppUser | null;
+  roles: Role[];
+  primaryRole: Role | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, role: UserRole) => Promise<boolean>;
-  logout: () => void;
-  setUser: (user: User | null) => void;
+  initialized: boolean;
+  init: () => Promise<void>;
+  loadProfile: (userId: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  signOut: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const pickPrimaryRole = (roles: Role[]): Role | null => {
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('club_admin')) return 'club_admin';
+  if (roles.includes('student')) return 'student';
+  return null;
+};
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  session: null,
+  authUser: null,
   user: null,
+  roles: [],
+  primaryRole: null,
   isAuthenticated: false,
   isLoading: false,
+  initialized: false,
 
-  login: async (email: string, password: string, role: UserRole) => {
+  init: async () => {
+    if (get().initialized) return;
     set({ isLoading: true });
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock authentication - find user by email and role
-    const user = mockUsers.find(u => u.email === email && u.role === role);
-    
-    if (user || email.includes('@')) {
-      const mockUser: User = user || {
-        id: crypto.randomUUID(),
-        name: email.split('@')[0],
-        email,
-        role,
-        createdAt: new Date(),
-      };
-      
-      set({ user: mockUser, isAuthenticated: true, isLoading: false });
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return true;
+
+    // 1) Listener FIRST
+    supabase.auth.onAuthStateChange((_event, session) => {
+      set({
+        session,
+        authUser: session?.user ?? null,
+        isAuthenticated: !!session,
+      });
+      if (session?.user) {
+        // Defer DB calls
+        setTimeout(() => get().loadProfile(session.user.id), 0);
+      } else {
+        set({ user: null, roles: [], primaryRole: null });
+      }
+    });
+
+    // 2) Then existing session
+    const { data: { session } } = await supabase.auth.getSession();
+    set({
+      session,
+      authUser: session?.user ?? null,
+      isAuthenticated: !!session,
+      initialized: true,
+      isLoading: false,
+    });
+    if (session?.user) {
+      await get().loadProfile(session.user.id);
     }
-    
-    set({ isLoading: false });
-    return false;
   },
 
-  signup: async (name: string, email: string, password: string, role: UserRole) => {
+  loadProfile: async (userId: string) => {
+    const [{ data: profile }, { data: rolesData }] = await Promise.all([
+      supabase.from('profiles').select('id, name, email, avatar_url').eq('id', userId).maybeSingle(),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+    ]);
+
+    const roles = (rolesData?.map((r) => r.role) || []) as Role[];
+    set({
+      user: profile ? { id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url } : null,
+      roles,
+      primaryRole: pickPrimaryRole(roles),
+    });
+  },
+
+  signIn: async (email, password) => {
     set({ isLoading: true });
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name,
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    set({ isLoading: false });
+    if (error) return { error: error.message };
+    return {};
+  },
+
+  signUp: async (name, email, password) => {
+    set({ isLoading: true });
+    const { error } = await supabase.auth.signUp({
       email,
-      role,
-      createdAt: new Date(),
-    };
-    
-    set({ user: newUser, isAuthenticated: true, isLoading: false });
-    localStorage.setItem('user', JSON.stringify(newUser));
-    return true;
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { name },
+      },
+    });
+    set({ isLoading: false });
+    if (error) return { error: error.message };
+    return {};
   },
 
-  logout: () => {
-    set({ user: null, isAuthenticated: false });
-    localStorage.removeItem('user');
-  },
-
-  setUser: (user: User | null) => {
-    set({ user, isAuthenticated: !!user });
+  signOut: async () => {
+    await supabase.auth.signOut();
+    set({ user: null, roles: [], primaryRole: null, session: null, authUser: null, isAuthenticated: false });
   },
 }));
-
-// Initialize from localStorage
-const storedUser = localStorage.getItem('user');
-if (storedUser) {
-  try {
-    const user = JSON.parse(storedUser);
-    useAuthStore.getState().setUser(user);
-  } catch (e) {
-    localStorage.removeItem('user');
-  }
-}
