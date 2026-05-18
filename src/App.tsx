@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,12 +9,25 @@ import Auth from "./pages/Auth";
 import Events from "./pages/Events";
 import Clubs from "./pages/Clubs";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCertTemplates from "./pages/admin/AdminCertTemplates";
 import ClubAdminDashboard from "./pages/club-admin/ClubAdminDashboard";
 import CreateEvent from "./pages/club-admin/CreateEvent";
+import Registrations from "./pages/club-admin/Registrations";
+import ClubCertificates from "./pages/club-admin/Certificates";
+import EventReport from "./pages/club-admin/EventReport";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import NotFound from "./pages/NotFound";
+import { useAuthStore } from "./stores/authStore";
 
 const queryClient = new QueryClient();
+
+function AuthInit() {
+  const init = useAuthStore((s) => s.init);
+  const initialized = useAuthStore((s) => s.initialized);
+  useEffect(() => { if (!initialized) init(); }, [initialized, init]);
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,6 +35,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthInit />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
@@ -33,15 +48,16 @@ const App = () => (
           <Route path="/admin/clubs" element={<AdminDashboard />} />
           <Route path="/admin/events" element={<AdminDashboard />} />
           <Route path="/admin/approvals" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminDashboard />} />
-          
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/cert-templates" element={<AdminCertTemplates />} />
+
           {/* Club Admin Routes */}
           <Route path="/club-admin" element={<ClubAdminDashboard />} />
           <Route path="/club-admin/events" element={<ClubAdminDashboard />} />
           <Route path="/club-admin/create-event" element={<CreateEvent />} />
-          <Route path="/club-admin/registrations" element={<ClubAdminDashboard />} />
-          <Route path="/club-admin/club-profile" element={<ClubAdminDashboard />} />
+          <Route path="/club-admin/registrations" element={<Registrations />} />
+          <Route path="/club-admin/certificates" element={<ClubCertificates />} />
+          <Route path="/club-admin/event-report/:eventId" element={<EventReport />} />
           
           {/* Student Routes */}
           <Route path="/student" element={<StudentDashboard />} />
