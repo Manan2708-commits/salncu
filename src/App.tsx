@@ -35,6 +35,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthInit />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
