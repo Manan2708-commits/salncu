@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,12 +9,25 @@ import Auth from "./pages/Auth";
 import Events from "./pages/Events";
 import Clubs from "./pages/Clubs";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCertTemplates from "./pages/admin/AdminCertTemplates";
 import ClubAdminDashboard from "./pages/club-admin/ClubAdminDashboard";
 import CreateEvent from "./pages/club-admin/CreateEvent";
+import Registrations from "./pages/club-admin/Registrations";
+import ClubCertificates from "./pages/club-admin/Certificates";
+import EventReport from "./pages/club-admin/EventReport";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import NotFound from "./pages/NotFound";
+import { useAuthStore } from "./stores/authStore";
 
 const queryClient = new QueryClient();
+
+function AuthInit() {
+  const init = useAuthStore((s) => s.init);
+  const initialized = useAuthStore((s) => s.initialized);
+  useEffect(() => { if (!initialized) init(); }, [initialized, init]);
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
