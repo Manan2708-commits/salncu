@@ -11,12 +11,13 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps) {
-  const { isAuthenticated, primaryRole, roles, init, initialized, isLoading } = useAuthStore();
+  const { isAuthenticated, roles, init, initialized, isLoading } = useAuthStore();
 
   useEffect(() => {
     if (!initialized) init();
   }, [initialized, init]);
 
+  // Wait until init completes (init now awaits loadProfile before setting initialized=true)
   if (!initialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

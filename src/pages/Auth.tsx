@@ -18,36 +18,39 @@ export default function Auth() {
   const initialMode = (searchParams.get('mode') as 'login' | 'signup') || 'login';
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  // Track whether the current auth action was a login (should redirect) or signup (stay)
+  const [justSignedUp, setJustSignedUp] = useState(false);
 
   useEffect(() => { if (!initialized) init(); }, [initialized, init]);
 
-  // Redirect once authenticated — wait for role to load, fallback to /student
+  // Redirect if already authenticated when landing on this page (e.g. back button)
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (primaryRole) {
+    if (isAuthenticated && primaryRole && !justSignedUp) {
       const path = primaryRole === 'admin' ? '/admin' : primaryRole === 'club_admin' ? '/club-admin' : '/student';
       navigate(path, { replace: true });
-    } else {
-      // Role not loaded yet — wait up to 3s then fallback to /student
-      const timer = setTimeout(() => {
-        navigate('/student', { replace: true });
-      }, 3000);
-      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, primaryRole, navigate]);
+  }, [isAuthenticated, primaryRole, navigate, justSignedUp]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'login') {
       const { error } = await signIn(formData.email, formData.password);
       if (error) return toast({ title: 'Sign in failed', description: error, variant: 'destructive' });
+      const role = useAuthStore.getState().primaryRole;
+      const path = role === 'admin' ? '/admin' : role === 'club_admin' ? '/club-admin' : '/student';
       toast({ title: 'Welcome back!' });
+      navigate(path, { replace: true });
     } else {
       if (!formData.name.trim()) return toast({ title: 'Name required', variant: 'destructive' });
       if (formData.password.length < 6) return toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
+      setJustSignedUp(true);
       const { error } = await signUp(formData.name, formData.email, formData.password);
-      if (error) return toast({ title: 'Sign up failed', description: error, variant: 'destructive' });
+      if (error) {
+        setJustSignedUp(false);
+        return toast({ title: 'Sign up failed', description: error, variant: 'destructive' });
+      }
       toast({ title: 'Account created!', description: 'You can now explore events as a student.' });
+      navigate('/student', { replace: true });
     }
   };
 
@@ -56,7 +59,7 @@ export default function Auth() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-accent relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex flex-col justify-center px-12 text-primary-foreground">
-          <Link to="/" className="flex items-center gap-3 mb-12">
+          <Link to="/home" className="flex items-center gap-3 mb-12">
             <div className="w-14 h-14 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
               <GraduationCap className="w-8 h-8" />
             </div>
@@ -75,7 +78,7 @@ export default function Auth() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link to="/" className="flex items-center gap-2 mb-8 lg:hidden">
+          <Link to="/home" className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>

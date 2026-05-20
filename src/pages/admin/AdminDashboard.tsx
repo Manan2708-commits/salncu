@@ -11,14 +11,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function AdminDashboard() {
+  const { user } = useAuthStore();
   const { data: allClubs = [] } = useClubs();
   const { data: allEvents = [] } = useEvents();
   const { data: clubRequests = [] } = useClubRequests({ status: ['pending'] });
   const approve = useApproveClub();
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  // Derive display name from profile name or email prefix
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Admin';
 
   const { data: userCount = 0 } = useQuery({
     queryKey: ['user-count'],
@@ -58,7 +63,7 @@ export default function AdminDashboard() {
     <DashboardLayout requiredRole="admin">
       <div className="space-y-8">
         <div>
-          <h1 className="font-display text-3xl font-bold mb-2">Admin Dashboard</h1>
+          <h1 className="font-display text-3xl font-bold mb-1">Welcome, {displayName} 👋</h1>
           <p className="text-muted-foreground">Manage clubs, events, and approvals.</p>
         </div>
 

@@ -48,7 +48,7 @@ const Index = () => {
                 <Link to="/events">Explore Events<ArrowRight className="w-5 h-5 ml-2" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8" asChild>
-                <Link to="/auth?mode=signup">Sign Up</Link>
+                <Link to="/clubs">Explore Clubs</Link>
               </Button>
             </div>
           </div>
@@ -125,12 +125,12 @@ const Index = () => {
 
       <footer className="py-12 border-t border-border">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="font-display text-xl font-bold">Campus<span className="text-primary">Events</span></span>
-          </div>
+          </Link>
           <p className="text-sm text-muted-foreground">© 2026 CampusEvents</p>
         </div>
       </footer>
