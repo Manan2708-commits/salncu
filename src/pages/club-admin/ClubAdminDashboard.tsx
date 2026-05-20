@@ -2,7 +2,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { EventCard } from '@/components/events/EventCard';
 import { useAuthStore } from '@/stores/authStore';
-import { Calendar, Users, Clock, PlusCircle, TrendingUp } from 'lucide-react';
+import { Calendar, Users, Clock, PlusCircle, TrendingUp, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
@@ -33,9 +33,14 @@ export default function ClubAdminDashboard() {
             <p className="text-muted-foreground">{club ? "Manage your club's events and registrations." : "You're not yet linked to a club. Contact your admin."}</p>
           </div>
           {club && (
-            <Button className="btn-gradient" asChild>
-              <Link to="/club-admin/create-event"><PlusCircle className="w-4 h-4 mr-2" />Create Event</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link to={`/clubs/${club.id}`}><ExternalLink className="w-4 h-4 mr-2" />View Club Page</Link>
+              </Button>
+              <Button className="btn-gradient" asChild>
+                <Link to="/club-admin/create-event"><PlusCircle className="w-4 h-4 mr-2" />Create Event</Link>
+              </Button>
+            </div>
           )}
         </div>
 

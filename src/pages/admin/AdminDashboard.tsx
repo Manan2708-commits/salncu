@@ -4,7 +4,7 @@ import { ClubCard } from '@/components/clubs/ClubCard';
 import { EventCard } from '@/components/events/EventCard';
 import { Calendar, Building2, Users, CheckSquare, TrendingUp, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClubs, useApproveClub } from '@/hooks/useClubs';
+import { useClubs, useApproveClub, useClubRequests } from '@/hooks/useClubs';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 export default function AdminDashboard() {
   const { data: allClubs = [] } = useClubs();
   const { data: allEvents = [] } = useEvents();
+  const { data: clubRequests = [] } = useClubRequests({ status: ['pending'] });
   const approve = useApproveClub();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
   const stats = [
     { title: 'Total Clubs', value: allClubs.length, icon: Building2, variant: 'primary' as const },
     { title: 'Total Events', value: allEvents.length, icon: Calendar, variant: 'accent' as const },
-    { title: 'Pending Approvals', value: pendingClubs.length + pendingEvents.length, icon: CheckSquare, variant: 'warning' as const },
+    { title: 'Pending Approvals', value: pendingClubs.length + pendingEvents.length + clubRequests.length, icon: CheckSquare, variant: 'warning' as const },
     { title: 'Registered Users', value: userCount, icon: Users, variant: 'success' as const },
   ];
 
@@ -100,6 +101,20 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {clubRequests.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2"><Clock className="w-5 h-5 text-yellow-500" />Pending Club Registration Requests ({clubRequests.length})</CardTitle>
+              <Button variant="outline" size="sm" asChild><Link to="/admin/club-requests">Review All</Link></Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {clubRequests.length} user{clubRequests.length > 1 ? 's have' : ' has'} submitted a club registration request awaiting your review.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
