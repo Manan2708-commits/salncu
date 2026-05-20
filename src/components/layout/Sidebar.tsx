@@ -23,6 +23,7 @@ export function Sidebar({ className }: SidebarProps) {
           { href: '/admin/clubs', label: 'Manage Clubs', icon: Building2 },
           { href: '/admin/events', label: 'Manage Events', icon: Calendar },
           { href: '/admin/approvals', label: 'Approvals', icon: CheckSquare },
+          { href: '/admin/club-requests', label: 'Club Requests', icon: ClipboardList },
           { href: '/admin/users', label: 'Users', icon: Users },
           { href: '/admin/cert-templates', label: 'Certificate Templates', icon: Upload },
         ];
@@ -40,6 +41,7 @@ export function Sidebar({ className }: SidebarProps) {
           { href: '/student/events', label: 'Browse Events', icon: Calendar },
           { href: '/student/registered', label: 'My Registrations', icon: FileText },
           { href: '/student/clubs', label: 'Explore Clubs', icon: Building2 },
+          { href: '/register-club', label: 'Register a Club', icon: PlusCircle },
         ];
     }
   };
