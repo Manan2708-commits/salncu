@@ -18,23 +18,24 @@ export default function Auth() {
   const initialMode = (searchParams.get('mode') as 'login' | 'signup') || 'login';
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  // Track whether the current auth action was a login (should redirect) or signup (stay)
+  const [justSignedUp, setJustSignedUp] = useState(false);
 
   useEffect(() => { if (!initialized) init(); }, [initialized, init]);
 
-  // Redirect once authenticated — wait for role to load, fallback to /student
+  // Only redirect on login, not after signup
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || justSignedUp) return;
     if (primaryRole) {
       const path = primaryRole === 'admin' ? '/admin' : primaryRole === 'club_admin' ? '/club-admin' : '/student';
       navigate(path, { replace: true });
     } else {
-      // Role not loaded yet — wait up to 3s then fallback to /student
       const timer = setTimeout(() => {
         navigate('/student', { replace: true });
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, primaryRole, navigate]);
+  }, [isAuthenticated, primaryRole, navigate, justSignedUp]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +46,14 @@ export default function Auth() {
     } else {
       if (!formData.name.trim()) return toast({ title: 'Name required', variant: 'destructive' });
       if (formData.password.length < 6) return toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
+      setJustSignedUp(true);
       const { error } = await signUp(formData.name, formData.email, formData.password);
-      if (error) return toast({ title: 'Sign up failed', description: error, variant: 'destructive' });
+      if (error) {
+        setJustSignedUp(false);
+        return toast({ title: 'Sign up failed', description: error, variant: 'destructive' });
+      }
       toast({ title: 'Account created!', description: 'You can now explore events as a student.' });
+      navigate('/student', { replace: true });
     }
   };
 
