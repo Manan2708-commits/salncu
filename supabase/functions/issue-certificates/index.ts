@@ -113,8 +113,8 @@ Deno.serve(async (req) => {
             const downloadUrl = signed?.signedUrl;
             const html = `
               <div style="font-family: sans-serif; max-width: 560px; margin: auto;">
-                <h2 style="color: #4f46e5;">Congratulations, ${rec.name}!</h2>
-                <p>You have been awarded a <strong>${body.certificate_type.replace('_', ' ')}</strong> certificate for participating in <strong>${event.name}</strong>.</p>
+                <h2 style="color: #4f46e5;">Congratulations, ${escHtml(rec.name)}!</h2>
+                <p>You have been awarded a <strong>${escHtml(body.certificate_type.replace('_', ' '))}</strong> certificate for participating in <strong>${escHtml(event.name)}</strong>.</p>
                 <p>Your certificate is attached and also available for download below.</p>
                 ${downloadUrl ? `<p><a href="${downloadUrl}" style="background: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">Download Certificate</a></p>` : ''}
                 <p style="color: #666; font-size: 12px; margin-top: 32px;">— Campus Events</p>
