@@ -53,6 +53,11 @@ export default function AdminUsers() {
   ), [users, search]);
 
   const setRole = async (userId: string, role: Role) => {
+    // Prevent changing your own role
+    const { data: { user: me } } = await supabase.auth.getUser();
+    if (me?.id === userId) {
+      return toast({ title: 'Cannot change your own role', variant: 'destructive' });
+    }
     // Remove old roles, add new one
     const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', userId);
     if (delErr) return toast({ title: 'Failed', description: delErr.message, variant: 'destructive' });
