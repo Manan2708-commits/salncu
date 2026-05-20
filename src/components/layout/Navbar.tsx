@@ -15,7 +15,7 @@ export function Navbar() {
   const navigate = useNavigate();
 
   const getDashboardLink = () => {
-    if (!primaryRole) return '/auth';
+    if (!primaryRole) return '/student';
     return primaryRole === 'admin' ? '/admin' : primaryRole === 'club_admin' ? '/club-admin' : '/student';
   };
 
@@ -56,13 +56,12 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -70,8 +69,8 @@ export function Navbar() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="font-medium">{user?.name ?? 'Loading...'}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email ?? ''}</p>
                       {primaryRole && <p className="text-xs text-primary capitalize">{primaryRole.replace('_', ' ')}</p>}
                     </div>
                   </div>
@@ -89,16 +88,6 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              ) : (
-                // Authenticated but profile still loading — show avatar placeholder
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      <User className="w-4 h-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              )
             ) : (
               <>
                 <Button variant="ghost" asChild><Link to="/auth">Sign In</Link></Button>
