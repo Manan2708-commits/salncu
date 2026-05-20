@@ -11,13 +11,13 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps) {
-  const { isAuthenticated, primaryRole, roles, init, initialized, isLoading } = useAuthStore();
+  const { isAuthenticated, roles, init, initialized, isLoading } = useAuthStore();
 
   useEffect(() => {
     if (!initialized) init();
   }, [initialized, init]);
 
-  // Show spinner while initializing or while authenticated but roles not yet loaded
+  // Wait until init completes (init now awaits loadProfile before setting initialized=true)
   if (!initialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -27,15 +27,6 @@ export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps
   }
 
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
-
-  // If roles haven't loaded yet, wait (they load right after session)
-  if (isAuthenticated && roles.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   if (requiredRole) {
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];

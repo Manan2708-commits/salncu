@@ -48,33 +48,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (get().initialized) return;
     set({ isLoading: true });
 
-    // 1) Listener FIRST
-    supabase.auth.onAuthStateChange((_event, session) => {
+    // Get existing session first
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // Load profile if session exists BEFORE marking initialized
+    if (session?.user) {
+      set({ session, authUser: session.user, isAuthenticated: true });
+      await get().loadProfile(session.user.id);
+    }
+
+    set({ initialized: true, isLoading: false });
+
+    // Listen for future auth changes (sign in / sign out from other tabs)
+    supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      const prevUserId = get().authUser?.id;
+      const newUserId = newSession?.user?.id;
+
       set({
-        session,
-        authUser: session?.user ?? null,
-        isAuthenticated: !!session,
+        session: newSession,
+        authUser: newSession?.user ?? null,
+        isAuthenticated: !!newSession,
       });
-      if (session?.user) {
-        // Load profile immediately — no defer
-        get().loadProfile(session.user.id);
-      } else {
+
+      if (newSession?.user && newUserId !== prevUserId) {
+        // Only reload profile if it's a different user (avoid double-load on same session)
+        await get().loadProfile(newSession.user.id);
+      } else if (!newSession) {
         set({ user: null, roles: [], primaryRole: null });
       }
     });
-
-    // 2) Then existing session
-    const { data: { session } } = await supabase.auth.getSession();
-    set({
-      session,
-      authUser: session?.user ?? null,
-      isAuthenticated: !!session,
-      initialized: true,
-      isLoading: false,
-    });
-    if (session?.user) {
-      await get().loadProfile(session.user.id);
-    }
   },
 
   loadProfile: async (userId: string) => {
@@ -85,7 +87,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const roles = (rolesData?.map((r) => r.role) || []) as Role[];
     set({
-      user: profile ? { id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url } : null,
+      user: profile
+        ? { id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url }
+        : null,
       roles,
       primaryRole: pickPrimaryRole(roles),
     });
@@ -95,9 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { set({ isLoading: false }); return { error: error.message }; }
-    if (data.user) {
-      await get().loadProfile(data.user.id);
-    }
+    if (data.user) await get().loadProfile(data.user.id);
     set({ isLoading: false });
     return {};
   },
@@ -107,10 +109,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { name },
-      },
+      options: { data: { name } },
     });
     if (error) { set({ isLoading: false }); return { error: error.message }; }
     if (data.user) await get().loadProfile(data.user.id);
