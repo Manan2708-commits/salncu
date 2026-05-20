@@ -48,7 +48,7 @@ const Index = () => {
                 <Link to="/events">Explore Events<ArrowRight className="w-5 h-5 ml-2" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8" asChild>
-                <Link to="/auth?mode=signup">Sign Up</Link>
+                <Link to="/clubs">Explore Clubs</Link>
               </Button>
             </div>
           </div>

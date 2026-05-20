@@ -33,7 +33,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 glass border-b border-border/50">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between relative">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center transition-transform group-hover:scale-105">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
@@ -43,7 +43,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <Link key={link.href} to={link.href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
