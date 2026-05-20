@@ -56,8 +56,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: !!session,
       });
       if (session?.user) {
-        // Defer DB calls
-        setTimeout(() => get().loadProfile(session.user.id), 0);
+        // Load profile immediately — no defer
+        get().loadProfile(session.user.id);
       } else {
         set({ user: null, roles: [], primaryRole: null });
       }
@@ -93,15 +93,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async (email, password) => {
     set({ isLoading: true });
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { set({ isLoading: false }); return { error: error.message }; }
+    if (data.user) await get().loadProfile(data.user.id);
     set({ isLoading: false });
-    if (error) return { error: error.message };
     return {};
   },
 
   signUp: async (name, email, password) => {
     set({ isLoading: true });
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -109,8 +110,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         data: { name },
       },
     });
+    if (error) { set({ isLoading: false }); return { error: error.message }; }
+    if (data.user) await get().loadProfile(data.user.id);
     set({ isLoading: false });
-    if (error) return { error: error.message };
     return {};
   },
 
