@@ -55,7 +55,8 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated && user ? (
+            {isAuthenticated ? (
+              user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -88,6 +89,16 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              ) : (
+                // Authenticated but profile still loading — show avatar placeholder
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      <User className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              )
             ) : (
               <>
                 <Button variant="ghost" asChild><Link to="/auth">Sign In</Link></Button>
@@ -113,7 +124,7 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
-                {isAuthenticated && user ? (
+                {isAuthenticated ? (
                   <>
                     <Button variant="outline" asChild>
                       <Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
