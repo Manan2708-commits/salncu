@@ -34,9 +34,31 @@ Deno.serve(async (req) => {
     }
     const userId = claims.claims.sub as string;
 
+    // Role check: only admin or club_admin may issue certificates
+    const { data: roleRow } = await admin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'club_admin'])
+      .maybeSingle();
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const body = await req.json() as Body;
     if (!body.event_id || !body.certificate_type || !Array.isArray(body.recipients) || body.recipients.length === 0) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Validate recipients
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const r of body.recipients) {
+      if (!r?.name || typeof r.name !== 'string' || r.name.length > 200 ||
+          !r?.email || typeof r.email !== 'string' || !emailRe.test(r.email) || r.email.length > 320) {
+        return new Response(JSON.stringify({ error: 'Invalid recipient entry' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+    const escHtml = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
     // Fetch template
@@ -91,8 +113,8 @@ Deno.serve(async (req) => {
             const downloadUrl = signed?.signedUrl;
             const html = `
               <div style="font-family: sans-serif; max-width: 560px; margin: auto;">
-                <h2 style="color: #4f46e5;">Congratulations, ${rec.name}!</h2>
-                <p>You have been awarded a <strong>${body.certificate_type.replace('_', ' ')}</strong> certificate for participating in <strong>${event.name}</strong>.</p>
+                <h2 style="color: #4f46e5;">Congratulations, ${escHtml(rec.name)}!</h2>
+                <p>You have been awarded a <strong>${escHtml(body.certificate_type.replace('_', ' '))}</strong> certificate for participating in <strong>${escHtml(event.name)}</strong>.</p>
                 <p>Your certificate is attached and also available for download below.</p>
                 ${downloadUrl ? `<p><a href="${downloadUrl}" style="background: #4f46e5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; display: inline-block;">Download Certificate</a></p>` : ''}
                 <p style="color: #666; font-size: 12px; margin-top: 32px;">— Campus Events</p>
