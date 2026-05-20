@@ -23,17 +23,11 @@ export default function Auth() {
 
   useEffect(() => { if (!initialized) init(); }, [initialized, init]);
 
-  // Only redirect on login, not after signup
+  // Redirect if already authenticated when landing on this page (e.g. back button)
   useEffect(() => {
-    if (!isAuthenticated || justSignedUp) return;
-    if (primaryRole) {
+    if (isAuthenticated && primaryRole && !justSignedUp) {
       const path = primaryRole === 'admin' ? '/admin' : primaryRole === 'club_admin' ? '/club-admin' : '/student';
       navigate(path, { replace: true });
-    } else {
-      const timer = setTimeout(() => {
-        navigate('/student', { replace: true });
-      }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, primaryRole, navigate, justSignedUp]);
 
@@ -42,7 +36,11 @@ export default function Auth() {
     if (mode === 'login') {
       const { error } = await signIn(formData.email, formData.password);
       if (error) return toast({ title: 'Sign in failed', description: error, variant: 'destructive' });
+      // signIn awaits loadProfile, so primaryRole is set — read fresh from store
+      const { primaryRole: role } = useAuthStore.getState();
+      const path = role === 'admin' ? '/admin' : role === 'club_admin' ? '/club-admin' : '/student';
       toast({ title: 'Welcome back!' });
+      navigate(path, { replace: true });
     } else {
       if (!formData.name.trim()) return toast({ title: 'Name required', variant: 'destructive' });
       if (formData.password.length < 6) return toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
