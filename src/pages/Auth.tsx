@@ -21,11 +21,18 @@ export default function Auth() {
 
   useEffect(() => { if (!initialized) init(); }, [initialized, init]);
 
-  // Once authed, redirect by role
+  // Redirect once authenticated — wait for role to load, fallback to /student
   useEffect(() => {
-    if (isAuthenticated && primaryRole) {
+    if (!isAuthenticated) return;
+    if (primaryRole) {
       const path = primaryRole === 'admin' ? '/admin' : primaryRole === 'club_admin' ? '/club-admin' : '/student';
       navigate(path, { replace: true });
+    } else {
+      // Role not loaded yet — wait up to 3s then fallback to /student
+      const timer = setTimeout(() => {
+        navigate('/student', { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated, primaryRole, navigate]);
 
