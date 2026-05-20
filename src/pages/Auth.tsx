@@ -59,7 +59,7 @@ export default function Auth() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-accent relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex flex-col justify-center px-12 text-primary-foreground">
-          <Link to="/" className="flex items-center gap-3 mb-12">
+          <Link to="/home" className="flex items-center gap-3 mb-12">
             <div className="w-14 h-14 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
               <GraduationCap className="w-8 h-8" />
             </div>
@@ -78,7 +78,7 @@ export default function Auth() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link to="/" className="flex items-center gap-2 mb-8 lg:hidden">
+          <Link to="/home" className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>

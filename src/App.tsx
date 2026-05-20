@@ -41,7 +41,8 @@ const App = () => (
         <AuthInit />
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Auth />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/events" element={<Events />} />
           <Route path="/clubs" element={<Clubs />} />
