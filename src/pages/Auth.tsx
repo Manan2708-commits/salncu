@@ -36,8 +36,7 @@ export default function Auth() {
     if (mode === 'login') {
       const { error } = await signIn(formData.email, formData.password);
       if (error) return toast({ title: 'Sign in failed', description: error, variant: 'destructive' });
-      // signIn awaits loadProfile, so primaryRole is set — read fresh from store
-      const { primaryRole: role } = useAuthStore.getState();
+      const role = useAuthStore.getState().primaryRole;
       const path = role === 'admin' ? '/admin' : role === 'club_admin' ? '/club-admin' : '/student';
       toast({ title: 'Welcome back!' });
       navigate(path, { replace: true });

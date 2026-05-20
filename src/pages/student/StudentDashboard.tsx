@@ -40,7 +40,7 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <DashboardLayout requiredRole="student">
+    <DashboardLayout>
       <div className="space-y-8">
         <div>
           <h1 className="font-display text-3xl font-bold mb-2">Welcome, {user?.name}!</h1>

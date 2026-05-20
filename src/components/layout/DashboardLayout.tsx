@@ -17,8 +17,8 @@ export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps
     if (!initialized) init();
   }, [initialized, init]);
 
-  // Wait until fully initialized AND roles are loaded
-  if (!initialized || isLoading || (isAuthenticated && primaryRole === null)) {
+  // Show spinner while initializing or while authenticated but roles not yet loaded
+  if (!initialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -27,6 +27,15 @@ export function DashboardLayout({ children, requiredRole }: DashboardLayoutProps
   }
 
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
+
+  // If roles haven't loaded yet, wait (they load right after session)
+  if (isAuthenticated && roles.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (requiredRole) {
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
