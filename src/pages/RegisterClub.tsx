@@ -23,7 +23,7 @@ export default function RegisterClub() {
     club_description: '',
     coordinator_name: user?.name ?? '',
     coordinator_email: user?.email ?? '',
-    coordinator_phone: '',
+    coordinator_phone: user?.phone ?? '',
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
