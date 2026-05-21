@@ -100,10 +100,10 @@ export default function AdminClubRequests() {
           {selected && (
             <div className="space-y-3 text-sm">
               <p><span className="font-medium">Club:</span> {selected.club_name}</p>
-              <p><span className="font-medium">Submitted by:</span> {selected.profile?.name} ({selected.profile?.email})</p>
+              <p><span className="font-medium">President:</span> {selected.profile?.name} ({selected.profile?.email})</p>
               {action === 'approve' && (
                 <p className="text-muted-foreground text-xs bg-muted p-2 rounded">
-                  This will create the club, grant the user club_admin access, and link them to the club.
+                  This will create the club, automatically grant the user <strong>Club Admin</strong> role, and link them to the club.
                 </p>
               )}
               <div className="space-y-1">
@@ -154,7 +154,7 @@ function RequestCard({
         <p className="text-muted-foreground line-clamp-2">{req.club_description}</p>
 
         <div className="space-y-1 text-xs text-muted-foreground">
-          <p className="flex items-center gap-1"><User className="w-3 h-3" /> Coordinator: {req.coordinator_name}</p>
+          <p className="flex items-center gap-1"><User className="w-3 h-3" /> President: {req.coordinator_name}</p>
           <p className="flex items-center gap-1"><Mail className="w-3 h-3" /> {req.coordinator_email}</p>
           {req.coordinator_phone && <p className="flex items-center gap-1"><Phone className="w-3 h-3" /> {req.coordinator_phone}</p>}
         </div>

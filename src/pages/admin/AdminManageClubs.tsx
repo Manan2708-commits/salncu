@@ -98,7 +98,7 @@ export default function AdminManageClubs() {
                     <Users className="w-3.5 h-3.5" /> {club.member_count || 0} members
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Mail className="w-3.5 h-3.5" /> {club.coordinator_email}
+                    <Mail className="w-3.5 h-3.5" /> President: {club.coordinator_email}
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => openEdit(club)}>
@@ -132,11 +132,11 @@ export default function AdminManageClubs() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Coordinator Name</Label>
+                  <Label>President Name</Label>
                   <Input value={editing.coordinator_name} onChange={(e) => setEditing({ ...editing, coordinator_name: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Coordinator Email</Label>
+                  <Label>President Email</Label>
                   <Input value={editing.coordinator_email} onChange={(e) => setEditing({ ...editing, coordinator_email: e.target.value })} />
                 </div>
               </div>

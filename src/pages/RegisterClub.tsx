@@ -94,14 +94,14 @@ export default function RegisterClub() {
               </div>
 
               <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-3 text-muted-foreground">Coordinator Information</p>
+                <p className="text-sm font-medium mb-3 text-muted-foreground">President / Club Head Information</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="coordinator_name">Coordinator Name *</Label>
+                    <Label htmlFor="coordinator_name">President Name *</Label>
                     <Input id="coordinator_name" value={form.coordinator_name} onChange={set('coordinator_name')} required maxLength={100} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="coordinator_email">Coordinator Email *</Label>
+                    <Label htmlFor="coordinator_email">President Email *</Label>
                     <Input id="coordinator_email" type="email" value={form.coordinator_email} onChange={set('coordinator_email')} required maxLength={255} />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
