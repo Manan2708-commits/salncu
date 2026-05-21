@@ -24,15 +24,25 @@ export function useEvents(filters?: { status?: EventStatus[]; clubId?: string })
       const ids = (data || []).map((e: any) => e.id);
       let counts: Record<string, number> = {};
       if (ids.length) {
-        const { data: regs } = await supabase
-          .from('registrations')
-          .select('event_id')
-          .in('event_id', ids)
-          .neq('status', 'cancelled');
-        counts = (regs || []).reduce((acc: Record<string, number>, r: any) => {
-          acc[r.event_id] = (acc[r.event_id] || 0) + 1;
-          return acc;
-        }, {});
+        const { data: registrationCounts, error: countsError } = await supabase.rpc('get_event_registration_counts', {
+          _event_ids: ids,
+        });
+        if (!countsError) {
+          counts = (registrationCounts || []).reduce((acc: Record<string, number>, r: any) => {
+            acc[r.event_id] = Number(r.registration_count) || 0;
+            return acc;
+          }, {});
+        } else {
+          const { data: regs } = await supabase
+            .from('registrations')
+            .select('event_id')
+            .in('event_id', ids)
+            .neq('status', 'cancelled');
+          counts = (regs || []).reduce((acc: Record<string, number>, r: any) => {
+            acc[r.event_id] = (acc[r.event_id] || 0) + 1;
+            return acc;
+          }, {});
+        }
       }
       return (data || []).map((e: any) => ({ ...e, registration_count: counts[e.id] || 0 }));
     },
