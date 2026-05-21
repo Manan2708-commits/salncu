@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { EventCard } from '@/components/events/EventCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -206,14 +205,6 @@ function EventsContent() {
 
 export default function Events() {
   const { isAuthenticated } = useAuthStore();
-
-  if (isAuthenticated) {
-    return (
-      <DashboardLayout>
-        <EventsContent />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
