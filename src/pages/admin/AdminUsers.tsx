@@ -10,12 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState } from 'react';
 import type { Role } from '@/stores/authStore';
 import { useClubs } from '@/hooks/useClubs';
-import { Users, Search } from 'lucide-react';
+import { Users, Search, Phone } from 'lucide-react';
 
 type UserRow = {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   roles: Role[];
   club_id?: string | null;
 };
@@ -30,7 +31,7 @@ export default function AdminUsers() {
     queryKey: ['admin-users'],
     queryFn: async (): Promise<UserRow[]> => {
       const [{ data: profiles }, { data: roles }, { data: managed }] = await Promise.all([
-        supabase.from('profiles').select('id, name, email').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('id, name, email, phone').order('created_at', { ascending: false }),
         supabase.from('user_roles').select('user_id, role'),
         supabase.from('clubs').select('id, admin_user_id'),
       ]);
@@ -41,7 +42,7 @@ export default function AdminUsers() {
       const clubMap: Record<string, string> = {};
       (managed || []).forEach((c: any) => { if (c.admin_user_id) clubMap[c.admin_user_id] = c.id; });
       return (profiles || []).map((p: any) => ({
-        id: p.id, name: p.name, email: p.email,
+        id: p.id, name: p.name, email: p.email, phone: p.phone || null,
         roles: rolesMap[p.id] || [],
         club_id: clubMap[p.id] || null,
       }));
@@ -49,7 +50,9 @@ export default function AdminUsers() {
   });
 
   const filtered = useMemo(() => users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.phone || '').includes(search)
   ), [users, search]);
 
   const setRole = async (userId: string, role: Role) => {
@@ -107,6 +110,11 @@ export default function AdminUsers() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{u.name}</p>
                         <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                        {u.phone && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Phone className="w-3 h-3" />{u.phone}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Select value={role} onValueChange={(v) => setRole(u.id, v as Role)}>

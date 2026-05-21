@@ -8,6 +8,7 @@ export interface AppUser {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   avatar_url?: string | null;
 }
 
@@ -23,7 +24,7 @@ interface AuthState {
   init: () => Promise<void>;
   loadProfile: (userId: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (name: string, email: string, password: string, phone?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -81,14 +82,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadProfile: async (userId: string) => {
     const [{ data: profile }, { data: rolesData }] = await Promise.all([
-      supabase.from('profiles').select('id, name, email, avatar_url').eq('id', userId).maybeSingle(),
+      supabase.from('profiles').select('id, name, email, phone, avatar_url').eq('id', userId).maybeSingle(),
       supabase.from('user_roles').select('role').eq('user_id', userId),
     ]);
 
     const roles = (rolesData?.map((r) => r.role) || []) as Role[];
     set({
       user: profile
-        ? { id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url }
+        ? { id: profile.id, name: profile.name, email: profile.email, phone: profile.phone, avatar_url: profile.avatar_url }
         : null,
       roles,
       primaryRole: pickPrimaryRole(roles),
@@ -104,15 +105,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return {};
   },
 
-  signUp: async (name, email, password) => {
+  signUp: async (name, email, password, phone?: string) => {
     set({ isLoading: true });
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, phone } },
     });
     if (error) { set({ isLoading: false }); return { error: error.message }; }
-    if (data.user) await get().loadProfile(data.user.id);
+    if (data.user) {
+      // Save phone to profile
+      if (phone) {
+        await supabase.from('profiles').update({ phone }).eq('id', data.user.id);
+      }
+      await get().loadProfile(data.user.id);
+    }
     set({ isLoading: false });
     return {};
   },

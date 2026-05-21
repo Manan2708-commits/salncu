@@ -17,8 +17,7 @@ export default function Auth() {
 
   const initialMode = (searchParams.get('mode') as 'login' | 'signup') || 'login';
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  // Track whether the current auth action was a login (should redirect) or signup (stay)
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
   const [justSignedUp, setJustSignedUp] = useState(false);
 
   useEffect(() => { if (!initialized) init(); }, [initialized, init]);
@@ -44,7 +43,7 @@ export default function Auth() {
       if (!formData.name.trim()) return toast({ title: 'Name required', variant: 'destructive' });
       if (formData.password.length < 6) return toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
       setJustSignedUp(true);
-      const { error } = await signUp(formData.name, formData.email, formData.password);
+      const { error } = await signUp(formData.name, formData.email, formData.password, formData.phone || undefined);
       if (error) {
         setJustSignedUp(false);
         return toast({ title: 'Sign up failed', description: error, variant: 'destructive' });
@@ -108,6 +107,12 @@ export default function Auth() {
                       <Input id="name" placeholder="John Doe" value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required={mode === 'signup'} maxLength={100} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input id="phone" type="tel" placeholder="+91 98765 43210" value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        maxLength={20} />
                     </div>
                   </TabsContent>
 
