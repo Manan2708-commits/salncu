@@ -12,6 +12,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCertTemplates from "./pages/admin/AdminCertTemplates";
 import AdminClubRequests from "./pages/admin/AdminClubRequests";
+import AdminManageClubs from "./pages/admin/AdminManageClubs";
+import AdminManageEvents from "./pages/admin/AdminManageEvents";
 import RegisterClub from "./pages/RegisterClub";
 import ClubDetail from "./pages/ClubDetail";
 import ClubAdminDashboard from "./pages/club-admin/ClubAdminDashboard";
@@ -50,8 +52,8 @@ const App = () => (
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/clubs" element={<AdminDashboard />} />
-          <Route path="/admin/events" element={<AdminDashboard />} />
+          <Route path="/admin/clubs" element={<AdminManageClubs />} />
+          <Route path="/admin/events" element={<AdminManageEvents />} />
           <Route path="/admin/approvals" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/cert-templates" element={<AdminCertTemplates />} />
