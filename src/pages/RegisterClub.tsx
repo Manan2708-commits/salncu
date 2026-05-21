@@ -94,19 +94,35 @@ export default function RegisterClub() {
               </div>
 
               <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-3 text-muted-foreground">Coordinator Information</p>
+                <p className="text-sm font-medium mb-3 text-muted-foreground">President / Club Head Information</p>
+                <p className="text-xs text-muted-foreground mb-3">Your account details are used as the club president. These are pre-filled from your profile.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="coordinator_name">Coordinator Name *</Label>
-                    <Input id="coordinator_name" value={form.coordinator_name} onChange={set('coordinator_name')} required maxLength={100} />
+                    <Label htmlFor="coordinator_name">President Name *</Label>
+                    <Input
+                      id="coordinator_name"
+                      value={form.coordinator_name}
+                      onChange={set('coordinator_name')}
+                      required
+                      maxLength={100}
+                      placeholder="Your full name"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="coordinator_email">Coordinator Email *</Label>
-                    <Input id="coordinator_email" type="email" value={form.coordinator_email} onChange={set('coordinator_email')} required maxLength={255} />
+                    <Label htmlFor="coordinator_email">President Email *</Label>
+                    <Input
+                      id="coordinator_email"
+                      type="email"
+                      value={form.coordinator_email}
+                      onChange={set('coordinator_email')}
+                      required
+                      maxLength={255}
+                      placeholder="Your email"
+                    />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="coordinator_phone">Phone (optional)</Label>
-                    <Input id="coordinator_phone" value={form.coordinator_phone} onChange={set('coordinator_phone')} maxLength={20} placeholder="+1 234 567 8900" />
+                    <Input id="coordinator_phone" value={form.coordinator_phone} onChange={set('coordinator_phone')} maxLength={20} placeholder="+91 98765 43210" />
                   </div>
                 </div>
               </div>

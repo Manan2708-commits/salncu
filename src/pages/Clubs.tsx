@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ClubCard } from '@/components/clubs/ClubCard';
 import { Input } from '@/components/ui/input';
 import { Search, Loader2, Building2 } from 'lucide-react';
 import { useClubs } from '@/hooks/useClubs';
-import { useAuthStore } from '@/stores/authStore';
 
 function ClubsContent() {
   const [query, setQuery] = useState('');
@@ -52,16 +50,6 @@ function ClubsContent() {
 }
 
 export default function Clubs() {
-  const { isAuthenticated } = useAuthStore();
-
-  if (isAuthenticated) {
-    return (
-      <DashboardLayout>
-        <ClubsContent />
-      </DashboardLayout>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
