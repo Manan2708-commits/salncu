@@ -3,22 +3,28 @@ import { ClubCard } from '@/components/clubs/ClubCard';
 import { EventCard } from '@/components/events/EventCard';
 import { Clock, TrendingUp, CheckSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClubs, useApproveClub } from '@/hooks/useClubs';
+import { useClubs, useApproveClub, useClubRequests, useApproveClubRequest, useRejectClubRequest } from '@/hooks/useClubs';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function AdminApprovals() {
+  const { user } = useAuthStore();
   const { data: allClubs = [] } = useClubs();
   const { data: allEvents = [] } = useEvents();
+  const { data: pendingClubRequests = [] } = useClubRequests({ status: ['pending'] });
   const approve = useApproveClub();
+  const approveRequest = useApproveClubRequest();
+  const rejectRequest = useRejectClubRequest();
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const pendingClubs = allClubs.filter((c: any) => c.status === 'pending');
+  const totalPendingClubs = pendingClubs.length + pendingClubRequests.length;
   const pendingEvents = allEvents.filter((e: any) => e.status === 'pending');
   const upcomingEvents = allEvents.filter((e: any) => ['approved', 'upcoming', 'ongoing'].includes(e.status));
 
@@ -26,6 +32,20 @@ export default function AdminApprovals() {
     try {
       await approve.mutateAsync({ clubId, approve: ok });
       toast({ title: ok ? 'Club approved' : 'Club rejected' });
+    } catch (e: any) {
+      toast({ title: 'Failed', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  const handleApproveClubRequest = async (requestId: string, ok: boolean) => {
+    if (!user) return;
+    try {
+      if (ok) {
+        await approveRequest.mutateAsync({ requestId, adminId: user.id });
+      } else {
+        await rejectRequest.mutateAsync({ requestId, adminId: user.id });
+      }
+      toast({ title: ok ? 'Club request approved' : 'Club request rejected' });
     } catch (e: any) {
       toast({ title: 'Failed', description: e.message, variant: 'destructive' });
     }
@@ -56,14 +76,33 @@ export default function AdminApprovals() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="w-5 h-5 text-warning" /> Pending Club Approvals
-                {pendingClubs.length > 0 && (
-                  <span className="ml-auto text-sm font-normal text-muted-foreground">{pendingClubs.length} pending</span>
+                {totalPendingClubs > 0 && (
+                  <span className="ml-auto text-sm font-normal text-muted-foreground">{totalPendingClubs} pending</span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {pendingClubs.length > 0 ? (
+              {totalPendingClubs > 0 ? (
                 <div className="space-y-4">
+                  {pendingClubRequests.map((request: any) => (
+                    <ClubCard
+                      key={request.id}
+                      club={{
+                        id: request.id,
+                        name: request.club_name,
+                        description: request.club_description,
+                        status: request.status,
+                        member_count: 0,
+                        coordinator_name: request.coordinator_name,
+                        coordinator_email: request.coordinator_email,
+                        logo_url: request.club_logo_url,
+                      }}
+                      showActions
+                      linkable={false}
+                      onApprove={() => handleApproveClubRequest(request.id, true)}
+                      onReject={() => handleApproveClubRequest(request.id, false)}
+                    />
+                  ))}
                   {pendingClubs.map((club: any) => (
                     <ClubCard
                       key={club.id}

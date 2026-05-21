@@ -103,7 +103,7 @@ export function EventCard({ event, showActions = true, onRegister, onUnregister,
                 <span>
                   {regCount}/{event.max_participants} registered
                   {spotsLeft !== null && spotsLeft > 0 && <span className="text-success ml-1">({spotsLeft} spots left)</span>}
-                  {isFull && <span className="text-destructive ml-1">(Full)</span>}
+                  {isFull && <span className="text-destructive ml-1">(Slots full)</span>}
                 </span>
               </div>
             )}
@@ -123,7 +123,7 @@ export function EventCard({ event, showActions = true, onRegister, onUnregister,
               disabled={isFull || isDeadlinePassed}
               onClick={() => onRegister(event.id)}
             >
-              {isFull ? 'Full' : isDeadlinePassed ? 'Closed' : 'Register'}
+              {isFull ? 'Slots full' : isDeadlinePassed ? 'Closed' : 'Register'}
             </Button>
           )}
           {isRegistered && onUnregister && (
