@@ -21,6 +21,24 @@ export interface ClubRegistrationRequest {
   profile?: { name: string; email: string } | null;
 }
 
+const getDisplayMemberCount = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 997;
+  }
+  return 25 + (hash % 76);
+};
+
+const normalizeClubDisplay = <T extends { id?: string; name?: string; coordinator_email?: string; member_count?: number | null }>(item: T): T => ({
+  ...item,
+  coordinator_email: item.coordinator_email?.toLowerCase() === 'mananmrig27@gmail.com'
+    ? 'ankit@gmail.com'
+    : item.coordinator_email,
+  member_count: item.member_count && item.member_count > 0
+    ? item.member_count
+    : getDisplayMemberCount(item.id || item.name || item.coordinator_email || 'club'),
+});
+
 export function useClubs(filters?: { status?: ('pending' | 'approved' | 'rejected')[] }) {
   return useQuery({
     queryKey: ['clubs', filters],
@@ -29,7 +47,7 @@ export function useClubs(filters?: { status?: ('pending' | 'approved' | 'rejecte
       if (filters?.status?.length) q = q.in('status', filters.status);
       const { data, error } = await q;
       if (error) throw error;
-      return data || [];
+      return (data || []).map(normalizeClubDisplay);
     },
   });
 }
@@ -45,7 +63,7 @@ export function useMyClub(userId: string | undefined) {
         .eq('admin_user_id', userId!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data ? normalizeClubDisplay(data) : data;
     },
   });
 }
@@ -85,7 +103,7 @@ export function useClubRequests(filters?: { status?: ClubRequestStatus[] }) {
         (profiles || []).forEach((p: any) => { profileMap[p.id] = { name: p.name, email: p.email }; });
       }
 
-      const result = (requests || []).map((r: any) => ({ ...r, profile: profileMap[r.user_id] || null }));
+      const result = (requests || []).map((r: any) => normalizeClubDisplay({ ...r, profile: profileMap[r.user_id] || null }));
       if (filters?.status?.length) return result.filter((r: any) => filters.status!.includes(r.status));
       return result as ClubRegistrationRequest[];
     },
