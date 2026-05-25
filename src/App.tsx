@@ -55,8 +55,10 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/clubs" element={<AdminManageClubs />} />
           <Route path="/admin/events" element={<AdminManageEvents />} />
+          <Route path="/admin/create-event" element={<CreateEvent adminMode />} />
           <Route path="/admin/approvals" element={<AdminApprovals />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/certificates" element={<ClubCertificates />} />
           <Route path="/admin/cert-templates" element={<AdminCertTemplates />} />
           <Route path="/admin/club-requests" element={<AdminClubRequests />} />
 

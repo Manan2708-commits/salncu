@@ -10,10 +10,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { useMyClub } from '@/hooks/useClubs';
 import { useEvents, useEventRegistrations } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Award, Loader2, Mail, ExternalLink } from 'lucide-react';
 
-type CertType = 'community_service' | 'general_proficiency';
+type CertType = 'community_service' | 'general_proficiency' | 'sal_activity';
 
 export default function ClubCertificates() {
   const { user, primaryRole } = useAuthStore();
@@ -27,11 +27,21 @@ export default function ClubCertificates() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  useMemo(() => { if (!eventId && events.length) setEventId(events[0].id); }, [events, eventId]);
+  const sortedEvents = useMemo(
+    () => [...events].sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    [events]
+  );
+
+  useEffect(() => { if (!eventId && sortedEvents.length) setEventId(sortedEvents[0].id); }, [sortedEvents, eventId]);
   const selectedEvent = events.find((e: any) => e.id === eventId);
   const { data: regs = [] } = useEventRegistrations(eventId);
 
-  const attended = regs.filter((r: any) => r.status === 'attended');
+  const attended = useMemo(
+    () => regs
+      .filter((r: any) => r.status === 'attended')
+      .sort((a: any, b: any) => a.student_name.localeCompare(b.student_name)),
+    [regs]
+  );
   const all = attended.length > 0 && attended.every((r: any) => selected[r.id]);
   const toggleAll = () => {
     const next: Record<string, boolean> = {};
@@ -53,12 +63,29 @@ export default function ClubCertificates() {
       name: r.student_name, email: r.student_email,
     }));
     if (!recipients.length) return toast({ title: 'No recipients selected', variant: 'destructive' });
+    const dbCertType = certType === 'sal_activity' ? 'community_service' : certType;
     setIssuing(true);
     const { data, error } = await supabase.functions.invoke('issue-certificates', {
-      body: { event_id: eventId, certificate_type: certType, recipients },
+      body: { event_id: eventId, certificate_type: dbCertType, recipients },
     });
     setIssuing(false);
-    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+    if (error) {
+      const fallbackRows = recipients.map((recipient: any) => ({
+        event_id: eventId,
+        certificate_type: dbCertType,
+        recipient_name: recipient.name,
+        recipient_email: recipient.email,
+        status: 'pending' as const,
+        error_message: 'Edge Function unavailable. Certificate generation/email was not completed.',
+        issued_by: user?.id,
+      }));
+      const { error: fallbackError } = await supabase.from('certificates_issued').insert(fallbackRows);
+      if (fallbackError) return toast({ title: 'Failed', description: fallbackError.message, variant: 'destructive' });
+      toast({ title: 'Certificates queued', description: 'Edge Function is unavailable, so selected certificates were saved as pending.' });
+      setSelected({});
+      qc.invalidateQueries({ queryKey: ['certs-issued', eventId] });
+      return;
+    }
     toast({ title: 'Certificates issued', description: `${data?.issued ?? recipients.length} processed. ${data?.emailed ?? 0} emailed.` });
     setSelected({});
     qc.invalidateQueries({ queryKey: ['certs-issued', eventId] });
@@ -89,7 +116,7 @@ export default function ClubCertificates() {
               <Select value={eventId} onValueChange={(v) => { setEventId(v); setSelected({}); }}>
                 <SelectTrigger><SelectValue placeholder="Pick an event" /></SelectTrigger>
                 <SelectContent>
-                  {events.map((e: any) => (
+                  {sortedEvents.map((e: any) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -99,6 +126,7 @@ export default function ClubCertificates() {
                 <SelectContent>
                   <SelectItem value="general_proficiency">General Proficiency</SelectItem>
                   <SelectItem value="community_service">Community Service</SelectItem>
+                  {primaryRole === 'admin' && <SelectItem value="sal_activity">SAL Activities</SelectItem>}
                 </SelectContent>
               </Select>
             </div>

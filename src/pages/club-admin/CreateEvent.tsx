@@ -21,7 +21,9 @@ const eventTypes: { value: EventType; label: string }[] = [
   { value: 'tech', label: 'Tech' }, { value: 'other', label: 'Other' },
 ];
 
-export default function CreateEvent() {
+interface CreateEventProps { adminMode?: boolean }
+
+export default function CreateEvent({ adminMode = false }: CreateEventProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuthStore();
@@ -35,7 +37,20 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!club) {
+    let eventClub = club;
+    if (adminMode) {
+      const { data: salClub, error: salErr } = await supabase
+        .from('clubs')
+        .select('*')
+        .eq('name', 'Student Activities & Leadership Cell')
+        .maybeSingle();
+      if (salErr) {
+        toast({ title: 'SAL club lookup failed', description: salErr.message, variant: 'destructive' });
+        return;
+      }
+      eventClub = salClub;
+    }
+    if (!eventClub) {
       toast({ title: 'No club linked', description: 'You must be linked to an approved club to create events.', variant: 'destructive' });
       return;
     }
@@ -45,14 +60,14 @@ export default function CreateEvent() {
     try {
       let poster_url: string | null = null;
       if (poster) {
-        const path = `${club.id}/${Date.now()}-${poster.name}`;
+        const path = `${eventClub.id}/${Date.now()}-${poster.name}`;
         const { error: upErr } = await supabase.storage.from('event-posters').upload(path, poster);
         if (upErr) throw upErr;
         poster_url = supabase.storage.from('event-posters').getPublicUrl(path).data.publicUrl;
       }
 
       const { error } = await supabase.from('events').insert({
-        club_id: club.id,
+        club_id: eventClub.id,
         name: formData.name,
         description: formData.description,
         event_date: formData.date,
@@ -63,12 +78,15 @@ export default function CreateEvent() {
         max_participants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
         poster_url,
         created_by: user?.id,
-        status: 'pending',
+        status: adminMode ? 'approved' : 'pending',
       });
       if (error) throw error;
 
-      toast({ title: 'Event submitted!', description: 'Your event was submitted for admin approval.' });
-      navigate('/club-admin');
+      toast({
+        title: adminMode ? 'SAL event created!' : 'Event submitted!',
+        description: adminMode ? 'The event was created under SAL overall.' : 'Your event was submitted for admin approval.',
+      });
+      navigate(adminMode ? '/admin/events' : '/club-admin');
     } catch (err: any) {
       toast({ title: 'Failed to create event', description: err.message, variant: 'destructive' });
     } finally {
@@ -77,11 +95,13 @@ export default function CreateEvent() {
   };
 
   return (
-    <DashboardLayout requiredRole="club_admin">
+    <DashboardLayout requiredRole={adminMode ? 'admin' : 'club_admin'}>
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold mb-2">Create New Event</h1>
-          <p className="text-muted-foreground">Fill in the details below. Your event will be submitted for admin approval.</p>
+          <h1 className="font-display text-3xl font-bold mb-2">{adminMode ? 'Create SAL Event' : 'Create New Event'}</h1>
+          <p className="text-muted-foreground">
+            {adminMode ? 'Create an event for SAL overall. It will be visible as a Student Activities & Leadership Cell event.' : 'Fill in the details below. Your event will be submitted for admin approval.'}
+          </p>
         </div>
 
         <Card>
@@ -139,7 +159,7 @@ export default function CreateEvent() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate('/club-admin')}>Cancel</Button>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(adminMode ? '/admin/events' : '/club-admin')}>Cancel</Button>
                 <Button type="submit" className="flex-1 btn-gradient" disabled={isLoading}>
                   {isLoading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>) : 'Create Event'}
                 </Button>

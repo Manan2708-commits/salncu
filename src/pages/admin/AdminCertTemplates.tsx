@@ -8,13 +8,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { useState } from 'react';
-import { Upload, FileText, Award, HandHeart } from 'lucide-react';
+import { Upload, FileText, Award, HandHeart, Landmark } from 'lucide-react';
 
-type CertType = 'community_service' | 'general_proficiency';
+type CertType = 'community_service' | 'general_proficiency' | 'sal_activity';
+type DbCertType = 'community_service' | 'general_proficiency';
 
 const TYPES: { value: CertType; label: string; icon: any }[] = [
   { value: 'community_service', label: 'Community Service', icon: HandHeart },
   { value: 'general_proficiency', label: 'General Proficiency', icon: Award },
+  { value: 'sal_activity', label: 'SAL Activities', icon: Landmark },
 ];
 
 function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Icon: any }) {
@@ -23,10 +25,12 @@ function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Ic
   const { user } = useAuthStore();
   const [uploading, setUploading] = useState(false);
 
+  const dbType: DbCertType = type === 'sal_activity' ? 'community_service' : type;
+
   const { data: tpl } = useQuery({
     queryKey: ['cert-template', type],
     queryFn: async () => {
-      const { data } = await supabase.from('certificate_templates').select('*').eq('certificate_type', type).maybeSingle();
+      const { data } = await supabase.from('certificate_templates').select('*').eq('certificate_type', dbType).maybeSingle();
       return data;
     },
   });
@@ -38,16 +42,11 @@ function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Ic
     font_size: tpl?.font_size ?? 36,
   });
 
-  // Sync when template loads
-  if (tpl && coords.name_x === 300 && coords.name_y === 300 && tpl.name_x !== 300) {
-    // initial sync only
-  }
-
   const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      return toast({ title: 'PDF only', description: 'Please upload a PDF template.', variant: 'destructive' });
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      return toast({ title: 'Unsupported file', description: 'Please upload a PDF or image template.', variant: 'destructive' });
     }
     setUploading(true);
     const path = `${type}/${Date.now()}-${file.name}`;
@@ -55,7 +54,7 @@ function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Ic
     if (upErr) { setUploading(false); return toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); }
 
     const payload = {
-      certificate_type: type,
+      certificate_type: dbType,
       template_path: path,
       uploaded_by: user?.id,
       ...coords,
@@ -87,7 +86,7 @@ function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Ic
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3">
-          <Input type="file" accept="application/pdf" onChange={upload} disabled={uploading} />
+          <Input type="file" accept="application/pdf,image/*" onChange={upload} disabled={uploading} />
           {uploading && <span className="text-sm text-muted-foreground">Uploading…</span>}
         </div>
 
@@ -101,7 +100,7 @@ function TemplateCard({ type, label, Icon }: { type: CertType; label: string; Ic
           <div><Label className="text-xs">Font Size</Label><Input type="number" value={coords.font_size} onChange={(e) => setCoords({ ...coords, font_size: +e.target.value })} /></div>
         </div>
         <Button onClick={saveCoords} variant="outline" size="sm">Save positions</Button>
-        <p className="text-xs text-muted-foreground">Coordinates are PDF points from the bottom-left. Adjust to match your template layout.</p>
+        <p className="text-xs text-muted-foreground">Upload PDF or image templates. Coordinates are PDF points from the bottom-left. Adjust to match your template layout.</p>
       </CardContent>
     </Card>
   );

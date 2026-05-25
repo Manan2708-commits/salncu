@@ -22,9 +22,11 @@ export function Sidebar({ className }: SidebarProps) {
           ...base,
           { href: '/admin/clubs', label: 'Manage Clubs', icon: Building2 },
           { href: '/admin/events', label: 'Manage Events', icon: Calendar },
+          { href: '/admin/create-event', label: 'Create SAL Event', icon: PlusCircle },
           { href: '/admin/approvals', label: 'Approvals', icon: CheckSquare },
           { href: '/admin/club-requests', label: 'Club Requests', icon: ClipboardList },
           { href: '/admin/users', label: 'Users', icon: Users },
+          { href: '/admin/certificates', label: 'Certificates', icon: Award },
           { href: '/admin/cert-templates', label: 'Certificate Templates', icon: Upload },
         ];
       case 'club_admin':
