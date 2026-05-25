@@ -379,7 +379,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "club_admin" | "student"
       certificate_status: "pending" | "generated" | "sent" | "failed"
-      certificate_type: "community_service" | "general_proficiency"
+      certificate_type: "community_service" | "general_proficiency" | "sal_activity"
       club_status: "pending" | "approved" | "rejected"
       event_status:
         | "pending"
@@ -528,7 +528,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "club_admin", "student"],
       certificate_status: ["pending", "generated", "sent", "failed"],
-      certificate_type: ["community_service", "general_proficiency"],
+      certificate_type: ["community_service", "general_proficiency", "sal_activity"],
       club_status: ["pending", "approved", "rejected"],
       event_status: [
         "pending",
